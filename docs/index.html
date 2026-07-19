@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FedEx sista minuten-pris · Economy</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --muted:          #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;
+    --delta-good:     #006300;
+    --delta-bad:      #d03b3b;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 24px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted:          #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --delta-good:     #0ca30c;
+      --delta-bad:      #e66767;
+    }
+  }
+  .wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  header h1 { font-size: 20px; font-weight: 650; }
+  header p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .hero-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .hero-row .card { flex: 1 1 240px; }
+  .tile-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tile-value { font-size: 34px; font-weight: 700; margin-top: 6px; }
+  .tile-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .delta-up   { color: var(--delta-bad); font-weight: 600; }
+  .delta-down { color: var(--delta-good); font-weight: 600; }
+  .delta-flat { color: var(--muted); font-weight: 600; }
+  h2 { font-size: 14px; font-weight: 650; margin-bottom: 12px; }
+  #chart-holder { position: relative; }
+  #tooltip {
+    position: absolute; display: none; pointer-events: none;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12); white-space: nowrap; z-index: 5;
+  }
+  #tooltip .t-val { font-weight: 700; font-size: 13px; }
+  #tooltip .t-date { color: var(--text-secondary); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--baseline); }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
+  .empty-note { font-size: 13px; color: var(--muted); padding: 12px 0; }
+  footer { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>FedEx sista minuten-pris — International Economy®</h1>
+    <p>52390 Sverige → Middletown, PA 17057, USA · 10 paket à 18 kg · 60×40×20 cm · uppdateras 08:00 &amp; 16:00</p>
+  </header>
+
+  <div class="hero-row">
+    <div class="card">
+      <div class="tile-label">Pris per kilo</div>
+      <div class="tile-value" id="hero-kg">–</div>
+      <div class="tile-sub" id="hero-kg-sub">–</div>
+    </div>
+    <div class="card">
+      <div class="tile-label">Senaste sista minuten-pris</div>
+      <div class="tile-value" id="hero-price">–</div>
+      <div class="tile-sub" id="hero-meta">–</div>
+    </div>
+    <div class="card">
+      <div class="tile-label">Förändring sedan förra körningen</div>
+      <div class="tile-value" id="hero-delta">–</div>
+      <div class="tile-sub" id="hero-delta-sub">–</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Prisutveckling (SEK)</h2>
+    <div id="chart-holder">
+      <svg id="chart" width="100%" height="260" role="img" aria-label="Linjediagram över sista minuten-priset per körning"></svg>
+      <div id="tooltip"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Alla körningar</h2>
+    <table>
+      <thead><tr><th>Datum &amp; tid</th><th>Försändelsedatum</th><th class="num">Sista minuten-pris</th><th class="num">Pris/kg</th><th class="num">Förändring</th></tr></thead>
+      <tbody id="history-table"></tbody>
+    </table>
+  </div>
+
+  <footer>Priser från fedex.com prisverktyg (ej inloggad, exportpriser). Sista minuten-priset omfattar inte specialtjänster eller pengarna-tillbaka-garanti.</footer>
+</div>
+
+<!-- Prishistoriken läses från history.json i samma mapp (uppdateras av GitHub Actions). -->
+<script>
+let H = [];
+const TOTAL_KG = 180; // 10 paket à 18 kg
+const fmt = n => n.toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' kr';
+const fmtKg = n => (n / TOTAL_KG).toLocaleString('sv-SE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' kr/kg';
+const fmtTs = ts => { const d = new Date(ts); return d.toLocaleDateString('sv-SE', {day:'numeric', month:'short'}) + ' ' + d.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}); };
+
+function renderAll() {
+// Hero
+if (H.length) {
+  const last = H[H.length-1];
+  document.getElementById('hero-kg').textContent = fmtKg(last.price);
+  document.getElementById('hero-kg-sub').textContent = 'Totalvikt ' + TOTAL_KG + ' kg';
+  document.getElementById('hero-price').textContent = fmt(last.price);
+  document.getElementById('hero-meta').textContent = fmtTs(last.ts) + ' · avgång ' + last.ship_date;
+  const dEl = document.getElementById('hero-delta'), sEl = document.getElementById('hero-delta-sub');
+  if (H.length > 1) {
+    const prev = H[H.length-2], diff = last.price - prev.price;
+    const pct = (diff / prev.price * 100).toFixed(1).replace('.', ',');
+    if (Math.abs(diff) < 0.005) { dEl.textContent = '±0 kr'; dEl.className = 'tile-value delta-flat'; }
+    else {
+      dEl.textContent = (diff > 0 ? '+' : '−') + fmt(Math.abs(diff));
+      dEl.className = 'tile-value ' + (diff > 0 ? 'delta-up' : 'delta-down');
+    }
+    sEl.textContent = (diff > 0 ? '+' : diff < 0 ? '−' : '±') + Math.abs(pct) + ' % sedan ' + fmtTs(prev.ts);
+  } else {
+    dEl.textContent = '–'; sEl.textContent = 'Första mätningen';
+  }
+}
+
+// Chart
+function draw() {
+  const svg = document.getElementById('chart');
+  svg.innerHTML = '';
+  const Wd = svg.clientWidth || 800, Ht = 260;
+  svg.setAttribute('viewBox', `0 0 ${Wd} ${Ht}`);
+  const m = {t: 14, r: 18, b: 28, l: 62};
+  const iw = Wd - m.l - m.r, ih = Ht - m.t - m.b;
+  const css = getComputedStyle(document.body);
+  const C = { grid: css.getPropertyValue('--grid').trim(), base: css.getPropertyValue('--baseline').trim(),
+              mut: css.getPropertyValue('--muted').trim(), s1: css.getPropertyValue('--series-1').trim(),
+              surf: css.getPropertyValue('--surface-1').trim() };
+  const N = (t, a) => { const e = document.createElementNS('http://www.w3.org/2000/svg', t); for (const k in a) e.setAttribute(k, a[k]); svg.appendChild(e); return e; };
+
+  if (H.length < 2) {
+    const t = N('text', {x: Wd/2, y: Ht/2, 'text-anchor': 'middle', fill: C.mut, 'font-size': 13});
+    t.textContent = H.length ? 'Grafen ritas när det finns minst två mätningar.' : 'Ingen data ännu.';
+    return;
+  }
+  const prices = H.map(d => d.price);
+  let lo = Math.min(...prices), hi = Math.max(...prices);
+  const pad = Math.max((hi - lo) * 0.15, hi * 0.02); lo = Math.max(0, lo - pad); hi += pad;
+  const x = i => m.l + (H.length === 1 ? iw/2 : i / (H.length - 1) * iw);
+  const y = v => m.t + (1 - (v - lo) / (hi - lo)) * ih;
+
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = lo + (hi - lo) * i / ticks, yy = y(v);
+    N('line', {x1: m.l, x2: Wd - m.r, y1: yy, y2: yy, stroke: i === 0 ? C.base : C.grid, 'stroke-width': 1});
+    const t = N('text', {x: m.l - 8, y: yy + 4, 'text-anchor': 'end', fill: C.mut, 'font-size': 11, style: 'font-variant-numeric: tabular-nums'});
+    t.textContent = Math.round(v).toLocaleString('sv-SE');
+  }
+  const step = Math.max(1, Math.ceil(H.length / 7));
+  H.forEach((d, i) => {
+    if (i % step && i !== H.length - 1) return;
+    const t = N('text', {x: x(i), y: Ht - 8, 'text-anchor': 'middle', fill: C.mut, 'font-size': 11});
+    t.textContent = new Date(d.ts).toLocaleDateString('sv-SE', {day: 'numeric', month: 'short'});
+  });
+  N('path', {d: H.map((d, i) => (i ? 'L' : 'M') + x(i) + ' ' + y(d.price)).join(' '), fill: 'none', stroke: C.s1, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'});
+  H.forEach((d, i) => N('circle', {cx: x(i), cy: y(d.price), r: 4, fill: C.s1, stroke: C.surf, 'stroke-width': 2}));
+
+  const cross = N('line', {y1: m.t, y2: m.t + ih, stroke: C.base, 'stroke-width': 1, 'stroke-dasharray': '3 3', visibility: 'hidden'});
+  const tip = document.getElementById('tooltip'), holder = document.getElementById('chart-holder');
+  svg.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect(), mx = (ev.clientX - r.left) * (Wd / r.width);
+    let bi = 0, bd = 1e9;
+    H.forEach((d, i) => { const dd = Math.abs(x(i) - mx); if (dd < bd) { bd = dd; bi = i; } });
+    cross.setAttribute('x1', x(bi)); cross.setAttribute('x2', x(bi)); cross.setAttribute('visibility', 'visible');
+    tip.innerHTML = '<div class="t-val">' + fmt(H[bi].price) + ' · ' + fmtKg(H[bi].price) + '</div><div class="t-date">' + fmtTs(H[bi].ts) + ' · avgång ' + H[bi].ship_date + '</div>';
+    tip.style.display = 'block';
+    const hr = holder.getBoundingClientRect();
+    let tx = x(bi) / Wd * hr.width + 12;
+    if (tx + tip.offsetWidth > hr.width - 4) tx = x(bi) / Wd * hr.width - tip.offsetWidth - 12;
+    tip.style.left = tx + 'px';
+    tip.style.top = (y(H[bi].price) / Ht * hr.height - 10) + 'px';
+  });
+  svg.addEventListener('mouseleave', () => { cross.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; });
+}
+draw();
+addEventListener('resize', draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+
+// Table (newest first)
+const tb = document.getElementById('history-table');
+[...H].reverse().forEach((d, ri) => {
+  const i = H.length - 1 - ri;
+  const prev = i > 0 ? H[i-1] : null;
+  let delta = '–', cls = '';
+  if (prev) {
+    const diff = d.price - prev.price;
+    if (Math.abs(diff) < 0.005) { delta = '±0'; cls = 'delta-flat'; }
+    else { delta = (diff > 0 ? '+' : '−') + fmt(Math.abs(diff)); cls = diff > 0 ? 'delta-up' : 'delta-down'; }
+  }
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>' + fmtTs(d.ts) + '</td><td>' + d.ship_date + '</td><td class="num">' + fmt(d.price) + '</td><td class="num">' + fmtKg(d.price) + '</td><td class="num ' + cls + '">' + delta + '</td>';
+  tb.appendChild(tr);
+});
+}
+
+fetch('history.json?t=' + Date.now())
+  .then(r => r.json())
+  .then(data => { H = data; renderAll(); })
+  .catch(() => { document.getElementById('hero-meta').textContent = 'Kunde inte ladda history.json'; });
+</script>
+</body>
+</html>
