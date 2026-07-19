@@ -204,18 +204,22 @@ def run():
  
  
 def parse(body):
-    text = body.replace(" ", " ").replace(" ", " ")
+    # Tusentalsavgränsaren kan vara vanligt mellanslag, NBSP eller smalt
+    # mellanslag beroende på webbläsare — tillåt alla blanktecken i priset
+    # och rensa sedan bort allt utom siffror och decimalkomma.
     m = re.search(
         r"FAST SISTA MINUTEN-PRIS\s+LEVERERAS INNAN\s+[\d:.]+\s+"
-        r"FedEx International Economy®.*?([\d ]+,\d{2})\s*kr",
-        text,
+        r"FedEx International Economy\u00ae.*?((?:\d[\d\s\u00a0\u202f\u2009]*),\d{2})\s*kr",
+        body,
         re.S,
     )
     if not m:
         raise RuntimeError("hittade inget sista minuten-pris för Economy i resultatet")
-    price = float(m.group(1).replace(" ", "").replace(",", "."))
+    price = float(re.sub(r"[^\d,]", "", m.group(1)).replace(",", "."))
+    if not 1500 <= price <= 150000:
+        raise RuntimeError(f"orimligt pris tolkat ({price} kr) — sparar inte mätpunkten")
  
-    dm = re.search(r"som skickats\s*\n?\s*([^\n]+)", text)
+    dm = re.search(r"som skickats\s*\n?\s*([^\n]+)", body)
     ship_date = dm.group(1).strip() if dm else "okänt"
     return price, ship_date
  
