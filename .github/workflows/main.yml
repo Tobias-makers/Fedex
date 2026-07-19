@@ -1,0 +1,47 @@
+name: FedEx priskoll
+
+on:
+  schedule:
+    - cron: '0 6,14 * * *'   # 08:00 & 16:00 svensk sommartid (07:00 & 15:00 vintertid)
+  workflow_dispatch:          # gör att du kan starta en körning manuellt via Actions-fliken
+
+permissions:
+  contents: write
+
+concurrency: priskoll
+
+jobs:
+  priskoll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installera Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Kör priskollen
+        run: python scrape.py
+
+      - name: Spara mätpunkten
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase
+          git add docs/history.json
+          git diff --cached --quiet || git commit -m "Ny mätning $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push
+
+      - name: Ladda upp felsökningsfiler
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ github.run_id }}
+          path: debug/
+          if-no-files-found: ignore
