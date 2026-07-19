@@ -2,7 +2,7 @@ name: FedEx priskoll
  
 on:
   schedule:
-    - cron: '0 6,14 * * *'   # 08:00 & 16:00 svensk sommartid (07:00 & 15:00 vintertid)
+    - cron: '0 4,14,21 * * *'   # 06:00, 16:00 & 23:00 svensk sommartid
   workflow_dispatch:          # gör att du kan starta en körning manuellt via Actions-fliken
  
 permissions:
