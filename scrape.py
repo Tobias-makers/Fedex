@@ -128,7 +128,7 @@ def run():
             # --- Postnummer ---
             inputs = visible_inputs(page)
             log("synliga fält: " + json.dumps(inputs, ensure_ascii=False))
-            i_postal = find_index(inputs, "postnummer", "zip", "postal")
+            i_postal = find_index(inputs, "postnummer", "zip", "postal", "postcode")
             if i_postal is None:
                 raise RuntimeError("hittade inte postnummerfältet")
             fill_nth_visible(page, i_postal, FROM_POSTAL)
