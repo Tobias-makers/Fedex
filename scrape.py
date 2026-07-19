@@ -160,9 +160,12 @@ def run():
             inputs = visible_inputs(page)
             log("paketfält: " + json.dumps(inputs, ensure_ascii=False))
             i_qty = find_index(inputs, "antal paket", "quantity", "package-count")
+            if i_qty is None:
+                raise RuntimeError("hittade inte antalsfältet")
             i_wt = find_index(inputs, "paketets vikt", "weight", "vikt")
-            if i_qty is None or i_wt is None:
-                raise RuntimeError("hittade inte paket-/viktfälten")
+            if i_wt is None:
+                i_wt = i_qty + 1
+                log("viktfältet antas ligga direkt efter antalsfältet")
             i_l = find_index(inputs, "längd", "length")
             i_w = find_index(inputs, "bredd", "width")
             i_h = find_index(inputs, "höjd", "height")
