@@ -81,7 +81,7 @@
 <div class="wrap">
   <header>
     <h1>FedEx sista minuten-pris — International Economy®</h1>
-    <p>52390 Sverige → Middletown, PA 17057, USA · 10 paket à 18 kg · 60×40×20 cm · uppdateras 08:00 &amp; 16:00</p>
+    <p>52390 Sverige → Middletown, PA 17057, USA · 10 paket à 18 kg · 60×40×20 cm · uppdateras 06:00, 16:00 &amp; 23:00</p>
   </header>
 
   <div class="hero-row">
@@ -140,13 +140,14 @@ if (H.length) {
   const dEl = document.getElementById('hero-delta'), sEl = document.getElementById('hero-delta-sub');
   if (H.length > 1) {
     const prev = H[H.length-2], diff = last.price - prev.price;
-    const pct = (diff / prev.price * 100).toFixed(1).replace('.', ',');
-    if (Math.abs(diff) < 0.005) { dEl.textContent = '±0 kr'; dEl.className = 'tile-value delta-flat'; }
+    const pct = Math.abs(diff / prev.price * 100).toFixed(1).replace('.', ',');
+    if (Math.abs(diff) < 0.005) { dEl.textContent = '±0 kr/kg'; dEl.className = 'tile-value delta-flat'; }
     else {
-      dEl.textContent = (diff > 0 ? '+' : '−') + fmt(Math.abs(diff));
+      dEl.textContent = (diff > 0 ? '+' : '−') + fmtKg(Math.abs(diff));
       dEl.className = 'tile-value ' + (diff > 0 ? 'delta-up' : 'delta-down');
     }
-    sEl.textContent = (diff > 0 ? '+' : diff < 0 ? '−' : '±') + Math.abs(pct) + ' % sedan ' + fmtTs(prev.ts);
+    sEl.textContent = (diff > 0 ? '+' : diff < 0 ? '−' : '±') + pct + ' % (' +
+      (diff > 0 ? '+' : diff < 0 ? '−' : '±') + fmt(Math.abs(diff)) + ' totalt) sedan ' + fmtTs(prev.ts);
   } else {
     dEl.textContent = '–'; sEl.textContent = 'Första mätningen';
   }
@@ -223,7 +224,7 @@ const tb = document.getElementById('history-table');
   if (prev) {
     const diff = d.price - prev.price;
     if (Math.abs(diff) < 0.005) { delta = '±0'; cls = 'delta-flat'; }
-    else { delta = (diff > 0 ? '+' : '−') + fmt(Math.abs(diff)); cls = diff > 0 ? 'delta-up' : 'delta-down'; }
+    else { delta = (diff > 0 ? '+' : '−') + fmtKg(Math.abs(diff)); cls = diff > 0 ? 'delta-up' : 'delta-down'; }
   }
   const tr = document.createElement('tr');
   tr.innerHTML = '<td>' + fmtTs(d.ts) + '</td><td>' + d.ship_date + '</td><td class="num">' + fmt(d.price) + '</td><td class="num">' + fmtKg(d.price) + '</td><td class="num ' + cls + '">' + delta + '</td>';
