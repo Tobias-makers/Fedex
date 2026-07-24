@@ -83,5 +83,10 @@
     "ts": "2026-07-24T02:15",
     "price": 6848.34,
     "ship_date": "fredag 24 juli 2026"
+  },
+  {
+    "ts": "2026-07-24T21:05",
+    "price": 6848.34,
+    "ship_date": "fredag 24 juli 2026"
   }
 ]
