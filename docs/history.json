@@ -153,5 +153,10 @@
     "ts": "2026-08-01T02:14",
     "price": 7055.8,
     "ship_date": "måndag 3 augusti 2026"
+  },
+  {
+    "ts": "2026-08-01T12:23",
+    "price": 7055.8,
+    "ship_date": "måndag 3 augusti 2026"
   }
 ]
