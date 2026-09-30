@@ -903,5 +903,10 @@
     "ts": "2026-09-29T21:05",
     "price": 23128.74,
     "ship_date": "tisdag 29 september 2026"
+  },
+  {
+    "ts": "2026-09-30T02:02",
+    "price": 23128.74,
+    "ship_date": "onsdag 30 september 2026"
   }
 ]
