@@ -1153,5 +1153,10 @@
     "ts": "2026-10-19T00:43",
     "price": 10146.51,
     "ship_date": "måndag 19 oktober 2026"
+  },
+  {
+    "ts": "2026-10-19T21:37",
+    "price": 10146.51,
+    "ship_date": "måndag 19 oktober 2026"
   }
 ]
