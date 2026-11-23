@@ -1558,5 +1558,10 @@
     "ts": "2026-11-23T02:21",
     "price": 23329.51,
     "ship_date": "måndag 23 november 2026"
+  },
+  {
+    "ts": "2026-11-23T14:57",
+    "price": 23329.51,
+    "ship_date": "måndag 23 november 2026"
   }
 ]
